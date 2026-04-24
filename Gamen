@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premier League Title Race Forecast</title>
+  <style>
+    :root {
+      --pl-purple: #37003c;
+      --pl-pink: #ff2882;
+      --pl-cyan: #00ff87;
+      --pl-blue: #04f5ff;
+      --bg: #f4f2f8;
+      --card: #ffffff;
+      --text: #1f1f29;
+      --muted: #6f6f7a;
+      --border: #e6e2ee;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--pl-purple), #5b0063);
+      color: white;
+      padding: 22px 18px 28px;
+      border-bottom-left-radius: 28px;
+      border-bottom-right-radius: 28px;
+    }
+
+    .top-label {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      opacity: 0.8;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+      font-size: 26px;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 13px;
+      color: #eadff0;
+      line-height: 1.6;
+    }
+
+    .hero-card {
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hero-card strong {
+      font-size: 15px;
+    }
+
+    .hero-card span {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #e7d7ec;
+    }
+
+    .live-badge {
+      background: var(--pl-cyan);
+      color: var(--pl-purple);
+      font-size: 12px;
+      font-weight: 900;
+      padding: 8px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    main {
+      padding: 16px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 18px;
+      margin: 10px 0 12px;
+      color: var(--pl-purple);
+    }
+
+    .controls {
+      background: var(--card);
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(55, 0, 60, 0.08);
+      margin-bottom: 18px;
+    }
+
+    .control-row {
+      margin-bottom: 14px;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .control-head span:last-child {
+      color: var(--pl-pink);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--pl-pink);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 16px 0 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      padding: 13px 12px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--pl-purple);
+      color: white;
+    }
+
+    .secondary {
+      background: white;
+      color: var(--pl-purple);
+      border: 1px solid var(--border);
+    }
+
+    .ranking {
+      display: grid;
+      gap: 12px;
+    }
+
+    .team-card {
+      background: var(--card);
+      border-radius: 22px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(55, 0, 60, 0.07);
+    }
+
+    .team-main {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .rank {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--pl-purple);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .team-name {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .team-meta {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .prob {
+      text-align: right;
+      font-size: 20px;
+      font-weight: 950;
+      color: var(--pl-purple);
+    }
+
+    .prob small {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .bar-wrap {
+      margin-top: 12px;
+      height: 11px;
+      background: #eeeaf4;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pl-pink), var(--pl-blue), var(--pl-cyan));
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      background: #faf8fd;
+      border-radius: 12px;
+      padding: 8px 4px;
+      text-align: center;
+      border: 1px solid #eee8f3;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 12px;
+      color: var(--pl-purple);
+    }
+
+    .stat span {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .note {
+      margin: 18px 0 26px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .match-panel {
+      background: #120017;
+      color: white;
+      border-radius: 22px;
+      padding: 16px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .match-panel::after {
+      content: "";
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: var(--pl-pink);
+      opacity: 0.18;
+      right: -70px;
+      top: -70px;
+    }
+
+    .match-title {
+      position: relative;
+      z-index: 1;
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .match-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .club {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 12px 8px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .vs {
+      color: var(--pl-cyan);
+      font-weight: 950;
+      font-size: 14px;
+    }
+
+    .footer-space {
+      height: 20px;
+    }
+
+    @media (max-width: 430px) {
+      h1 {
+        font-size: 24px;
+      }
+
+      main {
+        padding: 14px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .stat {
+        padding: 7px 2px;
+      }
+
+      .stat b {
+        font-size: 11px;
+      }
+
+      .stat span {
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top-label">TITLE RACE FORECAST</div>
+    <h1>Premier League<br>優勝確率シミュレーター</h1>
+    <p class="subtitle">
+      ELO・xG・選手力・シュート数・直近フォームを重みづけして、優勝確率をランキング表示します。
+    </p>
+
+    <div class="hero-card">
+      <div>
+        <strong id="topTeam">計算中...</strong>
+        <span>現在のモデル上の優勝本命</span>
+      </div>
+      <div class="live-badge">LIVE MODEL</div>
+    </div>
+  </header>
+
+  <main>
+    <h2 class="section-title">モデル調整</h2>
+
+    <section class="controls">
+      <div class="control-row">
+        <div class="control-head">
+          <span>ELOの重要度</span>
+          <span id="eloVal">35</span>
+        </div>
+        <input id="eloWeight" type="range" min="0" max="100" value="35">
+      </div>
+
+      <div class="control-row">
+        <div class="control-head">
+          <span>xGの重要度</span>
+          <span id="xgVal">25</span>
+        </div>
+        <input id="xgWeight" type="range" min="0" max="100" value="25">
+      </div>
+
+      <div class="control-row">
+        <div class="control-head">
+          <span>選手力の重要度</span>
+          <span id="playerVal">20</span>
+        </div>
+        <input id="playerWeight" type="range" min="0" max="100" value="20">
+      </div>
+
+      <div class="control-row">
+        <div class="control-head">
+          <span>直近フォームの重要度</span>
+          <span id="formVal">15</span>
+        </div>
+        <input id="formWeight" type="range" min="0" max="100" value="15">
+      </div>
+
+      <div class="control-row">
+        <div class="control-head">
+          <span>シュート数の重要度</span>
+          <span id="shotsVal">5</span>
+        </div>
+        <input id="shotsWeight" type="range" min="0" max="100" value="5">
+      </div>
+    </section>
+
+    <section class="match-panel">
+      <div class="match-title">次節シミュレーション</div>
+      <div class="match-grid">
+        <div class="club">Arsenal</div>
+        <div class="vs">VS</div>
+        <div class="club">Man City</div>
+      </div>
+    </section>
+
+    <div class="buttons">
+      <button class="primary" onclick="simulateMatch()">試合結果を反映</button>
+      <button class="secondary" onclick="resetData()">リセット</button>
+    </div>
+
+    <h2 class="section-title">優勝確率ランキング</h2>
+    <section id="ranking" class="ranking"></section>
+
+    <p class="note">
+      ※これはまず動作確認用のデモです。実際の最新順位・xG・怪我人・選手能力・オッズを反映するには、
+      APIやCSVデータを接続します。GitHub Pagesでもこのまま表示できます。
+    </p>
+
+    <div class="footer-space"></div>
+  </main>
+
+  <script>
+    const initialTeams = [
+      { name: "Arsenal", elo: 91, xg: 88, player: 89, form: 86, shots: 84 },
+      { name: "Liverpool", elo: 92, xg: 87, player: 90, form: 88, shots: 86 },
+      { name: "Man City", elo: 94, xg: 90, player: 94, form: 82, shots: 88 },
+      { name: "Chelsea", elo: 86, xg: 83, player: 87, form: 80, shots: 82 },
+      { name: "Tottenham", elo: 82, xg: 80, player: 81, form: 79, shots: 78 },
+      { name: "Newcastle", elo: 84, xg: 81, player: 82, form: 77, shots: 80 },
+      { name: "Aston Villa", elo: 83, xg: 79, player: 80, form: 78, shots: 76 },
+      { name: "Man United", elo: 81, xg: 76, player: 83, form: 72, shots: 74 }
+    ];
+
+    let teams = JSON.parse(JSON.stringify(initialTeams));
+
+    const weights = {
+      elo: document.getElementById("eloWeight"),
+      xg: document.getElementById("xgWeight"),
+      player: document.getElementById("playerWeight"),
+      form: document.getElementById("formWeight"),
+      shots: document.getElementById("shotsWeight")
+    };
+
+    const valueLabels = {
+      elo: document.getElementById("eloVal"),
+      xg: document.getElementById("xgVal"),
+      player: document.getElementById("playerVal"),
+      form: document.getElementById("formVal"),
+      shots: document.getElementById("shotsVal")
+    };
+
+    Object.keys(weights).forEach(key => {
+      weights[key].addEventListener("input", () => {
+        valueLabels[key].textContent = weights[key].value;
+        render();
+      });
+    });
+
+    function getWeightValues() {
+      return {
+        elo: Number(weights.elo.value),
+        xg: Number(weights.xg.value),
+        player: Number(weights.player.value),
+        form: Number(weights.form.value),
+        shots: Number(weights.shots.value)
+      };
+    }
+
+    function calculateScores() {
+      const w = getWeightValues();
+      const totalWeight = w.elo + w.xg + w.player + w.form + w.shots || 1;
+
+      const scored = teams.map(team => {
+        const rawScore =
+          team.elo * w.elo +
+          team.xg * w.xg +
+          team.player * w.player +
+          team.form * w.form +
+          team.shots * w.shots;
+
+        return {
+          ...team,
+          score: rawScore / totalWeight
+        };
+      });
+
+      const maxScore = Math.max(...scored.map(t => t.score));
+
+      const expScores = scored.map(t => ({
+        ...t,
+        exp: Math.exp((t.score - maxScore) / 4.8)
+      }));
+
+      const expTotal = expScores.reduce((sum, t) => sum + t.exp, 0);
+
+      return expScores
+        .map(t => ({
+          ...t,
+          probability: (t.exp / expTotal) * 100
+        }))
+        .sort((a, b) => b.probability - a.probability);
+    }
+
+    function render() {
+      const ranked = calculateScores();
+      const ranking = document.getElementById("ranking");
+      ranking.innerHTML = "";
+
+      document.getElementById("topTeam").textContent =
+        `${ranked[0].name} ${ranked[0].probability.toFixed(1)}%`;
+
+      ranked.forEach((team, index) => {
+        const card = document.createElement("div");
+        card.className = "team-card";
+
+        card.innerHTML = `
+          <div class="team-main">
+            <div class="rank">${index + 1}</div>
+            <div>
+              <div class="team-name">${team.name}</div>
+              <div class="team-meta">Model Score ${team.score.toFixed(1)}</div>
+            </div>
+            <div class="prob">
+              ${team.probability.toFixed(1)}%
+              <small>Title Chance</small>
+            </div>
+          </div>
+
+          <div class="bar-wrap">
+            <div class="bar" style="width:${team.probability}%"></div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><b>${team.elo}</b><span>ELO</span></div>
+            <div class="stat"><b>${team.xg}</b><span>xG</span></div>
+            <div class="stat"><b>${team.player}</b><span>選手力</span></div>
+            <div class="stat"><b>${team.form}</b><span>フォーム</span></div>
+            <div class="stat"><b>${team.shots}</b><span>シュート</span></div>
+          </div>
+        `;
+
+        ranking.appendChild(card);
+      });
+    }
+
+    function clamp(value) {
+      return Math.max(50, Math.min(99, Math.round(value)));
+    }
+
+    function simulateMatch() {
+      teams = teams.map(team => {
+        if (team.name === "Arsenal") {
+          return {
+            ...team,
+            elo: clamp(team.elo + 2),
+            xg: clamp(team.xg + 1),
+            form: clamp(team.form + 4),
+            shots: clamp(team.shots + 2)
+          };
+        }
+
+        if (team.name === "Man City") {
+          return {
+            ...team,
+            elo: clamp(team.elo - 2),
+            xg: clamp(team.xg - 1),
+            form: clamp(team.form - 3),
+            shots: clamp(team.shots - 1)
+          };
+        }
+
+        return {
+          ...team,
+          form: clamp(team.form + Math.floor(Math.random() * 3) - 1)
+        };
+      });
+
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function resetData() {
+      teams = JSON.parse(JSON.stringify(initialTeams));
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
