@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "note": "Demo data for Premier League forecast app. Replace these values with latest real standings, xG, Elo, injury and fixture data for serious prediction.",
+    "data_type": "sample_forecast_input",
+    "created_by": "ChatGPT",
+    "version": "1.0"
+  },
+  "teams": [
+    {"team":"Arsenal","short":"ARS","current_points":56,"played":27,"elo":91,"xg":88,"defense":91,"squad":90,"form":88,"injury_penalty":3},
+    {"team":"Liverpool","short":"LIV","current_points":55,"played":27,"elo":92,"xg":89,"defense":86,"squad":91,"form":85,"injury_penalty":4},
+    {"team":"Manchester City","short":"MCI","current_points":53,"played":27,"elo":94,"xg":90,"defense":88,"squad":94,"form":82,"injury_penalty":5},
+    {"team":"Chelsea","short":"CHE","current_points":49,"played":27,"elo":86,"xg":84,"defense":79,"squad":87,"form":81,"injury_penalty":5},
+    {"team":"Newcastle United","short":"NEW","current_points":47,"played":27,"elo":85,"xg":82,"defense":78,"squad":84,"form":80,"injury_penalty":6},
+    {"team":"Tottenham Hotspur","short":"TOT","current_points":45,"played":27,"elo":83,"xg":81,"defense":75,"squad":83,"form":77,"injury_penalty":7},
+    {"team":"Aston Villa","short":"AVL","current_points":44,"played":27,"elo":84,"xg":79,"defense":77,"squad":82,"form":78,"injury_penalty":5},
+    {"team":"Manchester United","short":"MUN","current_points":42,"played":27,"elo":82,"xg":76,"defense":74,"squad":84,"form":73,"injury_penalty":8},
+    {"team":"Brighton","short":"BHA","current_points":39,"played":27,"elo":80,"xg":78,"defense":73,"squad":78,"form":75,"injury_penalty":6},
+    {"team":"Bournemouth","short":"BOU","current_points":38,"played":27,"elo":78,"xg":76,"defense":72,"squad":75,"form":76,"injury_penalty":4},
+    {"team":"Crystal Palace","short":"CRY","current_points":36,"played":27,"elo":77,"xg":72,"defense":74,"squad":76,"form":74,"injury_penalty":5},
+    {"team":"Fulham","short":"FUL","current_points":35,"played":27,"elo":76,"xg":73,"defense":72,"squad":75,"form":72,"injury_penalty":4},
+    {"team":"Brentford","short":"BRE","current_points":33,"played":27,"elo":75,"xg":72,"defense":68,"squad":73,"form":71,"injury_penalty":6},
+    {"team":"Everton","short":"EVE","current_points":32,"played":27,"elo":74,"xg":68,"defense":71,"squad":72,"form":70,"injury_penalty":5},
+    {"team":"West Ham United","short":"WHU","current_points":31,"played":27,"elo":74,"xg":69,"defense":66,"squad":74,"form":68,"injury_penalty":7},
+    {"team":"Nottingham Forest","short":"NFO","current_points":30,"played":27,"elo":73,"xg":68,"defense":67,"squad":72,"form":69,"injury_penalty":6},
+    {"team":"Wolves","short":"WOL","current_points":27,"played":27,"elo":70,"xg":65,"defense":63,"squad":69,"form":64,"injury_penalty":8},
+    {"team":"Leeds United","short":"LEE","current_points":25,"played":27,"elo":69,"xg":66,"defense":61,"squad":68,"form":65,"injury_penalty":7},
+    {"team":"Burnley","short":"BUR","current_points":22,"played":27,"elo":66,"xg":61,"defense":58,"squad":65,"form":62,"injury_penalty":6},
+    {"team":"Sunderland","short":"SUN","current_points":21,"played":27,"elo":65,"xg":60,"defense":57,"squad":64,"form":61,"injury_penalty":7}
+  ],
+  "model_weights": {
+    "elo": 0.30,
+    "xg": 0.25,
+    "defense": 0.20,
+    "squad": 0.15,
+    "form": 0.10,
+    "injury_penalty_multiplier": 0.55
+  }
+}
