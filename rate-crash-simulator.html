@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>金利暴落ライン測定ツール</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#06101f;color:#eef6ff}main{max-width:1100px;margin:auto;padding:14px}.card{background:#0d1d33;border:1px solid #294763;border-radius:16px;padding:14px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}h1{font-size:24px}h2{font-size:18px;margin:0 0 10px}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}label{font-size:12px;color:#a9bbd1}input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #315575;background:#06111f;color:#fff;font-size:16px}.btn{display:inline-flex;min-height:48px;align-items:center;justify-content:center;margin:6px 6px 6px 0;padding:12px 14px;border-radius:12px;background:#86d7ff;color:#03111e;font-weight:800;text-decoration:none;touch-action:manipulation}.btn2{background:#172a45;color:#fff;border:1px solid #355a7e}.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.metric{background:#102642;border:1px solid #294763;border-radius:12px;padding:10px}.k{font-size:12px;color:#a9bbd1}.v{font-size:22px;font-weight:900;margin-top:4px}.green{color:#53d47d}.yellow{color:#ffc857}.red{color:#ff5d7a}.bar{display:grid;grid-template-columns:80px 1fr 48px;gap:8px;align-items:center;margin:6px 0;font-size:12px;color:#a9bbd1}.track{height:12px;background:#06111f;border:1px solid #294763;border-radius:999px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,#53d47d,#ffc857,#ff5d7a)}table{width:100%;border-collapse:collapse;background:#071529}th,td{padding:8px;border-bottom:1px solid #213d5d;text-align:right;font-size:13px}th:first-child,td:first-child{text-align:left}.wrap{overflow:auto;border:1px solid #294763;border-radius:12px}.progress{height:18px;background:#06111f;border:1px solid #294763;border-radius:999px;overflow:hidden}.progfill{height:100%;width:0;background:linear-gradient(90deg,#53d47d,#ffc857,#86d7ff)}.log{font-size:12px;color:#a9bbd1;line-height:1.6;max-height:100px;overflow:auto;margin-top:8px}.note{font-size:12px;color:#a9bbd1;line-height:1.6}.ok{color:#53d47d}.ng{color:#ffc857}
+</style>
+</head>
+<body>
+<main>
+<h1>金利暴落ライン測定ツール</h1>
+<p class="note">無料データ取得＋手入力で、米国・日本の10年金利があと何％上がると株式市場の暴落確率が高まるかを簡易推定します。</p>
+<div class="card">
+<h2>データ取得・計算</h2>
+<div class="progress"><div id="prog" class="progfill"></div></div>
+<div id="status" class="note">起動中</div>
+<div id="log" class="log"></div>
+<a href="#" class="btn" onclick="return fetchReal(event)" ontouchend="return fetchReal(event)">無料リアルデータ取得して再計算</a>
+<a href="#" class="btn btn2" onclick="return calcTap(event)" ontouchend="return calcTap(event)">手入力値で再計算</a>
+<a href="#" class="btn btn2" onclick="return resetTap(event)" ontouchend="return resetTap(event)">初期値に戻す</a>
+</div>
+<div class="card">
+<h2>共通設定</h2>
+<div class="inputs">
+<div><label>シミュレーション回数</label><select id="iters"><option value="3000">3,000</option><option value="10000" selected>10,000</option><option value="30000">30,000</option></select></div>
+<div><label>暴落判定</label><select id="crash"><option value="-15">-15%</option><option value="-20" selected>-20%</option><option value="-30">-30%</option></select></div>
+<div><label>危険ライン 暴落確率</label><select id="danger"><option value="20">20%</option><option value="30" selected>30%</option><option value="40">40%</option></select></div>
+<div><label>予測期間</label><select id="horizon"><option value="3">3か月</option><option value="6" selected>6か月</option><option value="12">12か月</option></select></div>
+<div><label>乱数シード</label><input id="seed" type="number" value="208"></div>
+</div>
+</div>
+<div class="grid">
+<section class="card">
+<h2>米国</h2>
+<div class="inputs">
+<div><label>米10年金利%</label><input id="us_rate" type="number" step="0.01" value="4.4"></div>
+<div><label>米2年金利%</label><input id="us_2y" type="number" step="0.01" value="4.0"></div>
+<div><label>PER</label><input id="us_per" type="number" step="0.5" value="21"></div>
+<div><label>EPS成長率%</label><input id="us_eps" type="number" step="1" value="8"></div>
+<div><label>インフレ率%</label><input id="us_infl" type="number" step="0.1" value="3.0"></div>
+<div><label>AIモメンタム -10〜10</label><input id="us_mom" type="number" step="1" value="5"></div>
+<div><label>信用不安 0〜10</label><input id="us_credit" type="number" step="1" value="3"></div>
+<div><label>FRBタカ派圧力 0〜10</label><input id="us_policy" type="number" step="1" value="5"></div>
+<div><label>景気後退圧力 0〜10</label><input id="us_recession" type="number" step="1" value="3"></div>
+</div>
+<div class="metrics"><div class="metric"><div class="k">暴落危険金利</div><div id="us_dr" class="v">--</div></div><div class="metric"><div class="k">暴落まであと</div><div id="us_gap" class="v">--</div></div><div class="metric"><div class="k">今後上昇予測</div><div id="us_fc" class="v">--</div></div><div class="metric"><div class="k">危険到達確率</div><div id="us_reach" class="v">--</div></div></div>
+<div id="us_bars"></div><div class="wrap"><table id="us_tbl"></table></div>
+</section>
+<section class="card">
+<h2>日本</h2>
+<div class="inputs">
+<div><label>日本10年金利%</label><input id="jp_rate" type="number" step="0.01" value="2.5"></div>
+<div><label>ドル円</label><input id="jp_fx" type="number" step="0.1" value="155"></div>
+<div><label>PER</label><input id="jp_per" type="number" step="0.5" value="20"></div>
+<div><label>EPS成長率%</label><input id="jp_eps" type="number" step="1" value="6"></div>
+<div><label>インフレ率%</label><input id="jp_infl" type="number" step="0.1" value="2.7"></div>
+<div><label>円安メリット -10〜10</label><input id="jp_mom" type="number" step="1" value="4"></div>
+<div><label>国債/銀行不安 0〜10</label><input id="jp_credit" type="number" step="1" value="4"></div>
+<div><label>日銀タカ派圧力 0〜10</label><input id="jp_policy" type="number" step="1" value="6"></div>
+<div><label>景気後退圧力 0〜10</label><input id="jp_recession" type="number" step="1" value="2"></div>
+</div>
+<div class="metrics"><div class="metric"><div class="k">暴落危険金利</div><div id="jp_dr" class="v">--</div></div><div class="metric"><div class="k">暴落まであと</div><div id="jp_gap" class="v">--</div></div><div class="metric"><div class="k">今後上昇予測</div><div id="jp_fc" class="v">--</div></div><div class="metric"><div class="k">危険到達確率</div><div id="jp_reach" class="v">--</div></div></div>
+<div id="jp_bars"></div><div class="wrap"><table id="jp_tbl"></table></div>
+</section>
+</div>
+<div class="card"><h2>注意</h2><p class="note">完全無料版なので、PER/EPS成長率は手入力です。外部取得はFRED、Stooq、Frankfurterを使います。GitHub Pagesで公開するとスマホでも開きやすくなります。</p></div>
+</main>
+<script>
+const $=id=>document.getElementById(id), n=id=>Number($(id).value), fmt=(x,d=2)=>isFinite(x)?Number(x).toFixed(d):'--', clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function prog(p,t){$('prog').style.width=clamp(p,0,100)+'%';$('status').textContent=t}function log(s,c=''){const d=document.createElement('div');d.className=c;d.textContent=s;$('log').appendChild(d)}
+function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}function randn(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function pfx(p){return{p,rate:n(p+'_rate'),per:n(p+'_per'),eps:n(p+'_eps'),infl:n(p+'_infl'),mom:n(p+'_mom'),credit:n(p+'_credit'),policy:n(p+'_policy'),recession:n(p+'_recession'),seed:n('seed')+(p==='us'?1000:2000),rs:p==='us'?0.74:0.82,panic:p==='us'?5.1:3.8,slope:p==='us'?7.0:8.8,real:p==='us'?2.2:1.6,max:p==='us'?8.5:7.5}}
+function one(m,rate){const r=rng(m.seed+Math.round(rate*1000)),iters=n('iters'),cr=n('crash');let c=0,sum=0,b=[];for(let i=0;i<iters;i++){let real=rate-m.infl+randn(r)*.35,eps=m.eps+randn(r)*4.5-m.credit*.35-m.recession*.55,mom=m.mom+randn(r)*2.2,cred=m.credit+Math.max(0,randn(r)*1.5)+Math.max(0,rate-m.panic)*.8,ey=2.2+rate*m.rs+Math.max(0,real)*.9+cred*.38-mom*.16-eps*.09,per=clamp(100/Math.max(2.2,ey),5,35),ret=(per/m.per-1)*100+eps*.7-Math.max(0,rate-m.panic)*m.slope-Math.max(0,real-m.real)*3.5-Math.max(0,cred-6)*1.4+randn(r)*5;if(ret<=cr)c++;sum+=ret;if(i<3000)b.push(ret)}b.sort((a,b)=>a-b);return{rate,prob:c/iters*100,avg:sum/iters,p5:b[Math.floor(b.length*.05)]||0}}
+function forecast(m,dr){const r=rng(m.seed+777),iters=n('iters'),h=n('horizon'),scale=Math.sqrt(h/6),arr=[];let reach=0,drift=.04+Math.max(0,m.infl-2)*.10+Math.max(0,m.infl-m.rate)*.08+m.policy*.055+m.credit*.035-m.recession*.055;for(let i=0;i<iters;i++){let rise=drift*(h/6)+randn(r)*(m.p==='us'?.38:.32)*scale+Math.max(0,randn(r))*m.credit*.025*scale;arr.push(rise);if(dr!==null&&m.rate+rise>=dr)reach++}arr.sort((a,b)=>a-b);return{med:arr[Math.floor(arr.length*.5)],reach:reach/iters*100}}
+function cls(x){return x>=40?'red':x>=20?'yellow':'green'}function put(id,v,c){$(id).textContent=v;$(id).className='v '+c}
+function render(p){const m=pfx(p),rows=[];for(let r=Math.max(0,Math.floor((m.rate-.5)*4)/4);r<=m.max+.001;r+=.25)rows.push(one(m,r));let danger=n('danger'),dr=null;for(const r of rows){if(r.prob>=danger){dr=r.rate;break}}let fc=forecast(m,dr),gap=dr===null?null:Math.max(0,dr-m.rate);put(p+'_dr',dr===null?'未到達':fmt(dr)+'%',dr===null?'green':cls(danger));put(p+'_gap',gap===null?'未到達':fmt(gap)+'%',gap!==null&&gap<.5?'red':gap!==null&&gap<1?'yellow':'green');put(p+'_fc',(fc.med>=0?'+':'')+fmt(fc.med)+'%',fc.med>.5?'red':fc.med>.2?'yellow':'green');put(p+'_reach',fmt(fc.reach,1)+'%',cls(fc.reach));$(p+'_bars').innerHTML=rows.filter((r,i)=>i%2===0||r.prob>=danger).map(r=>`<div class="bar"><div>${fmt(r.rate)}%</div><div class="track"><div class="fill" style="width:${clamp(r.prob,0,100)}%"></div></div><div class="${cls(r.prob)}">${fmt(r.prob,0)}%</div></div>`).join('');$(p+'_tbl').innerHTML='<thead><tr><th>10年金利</th><th>暴落確率</th><th>平均</th><th>悪い5%</th><th>判定</th></tr></thead><tbody>'+rows.map(r=>{let j=r.prob>=danger?'危険':r.prob>=danger/2?'警戒':'通常';return`<tr><td>${fmt(r.rate)}%</td><td>${fmt(r.prob,1)}%</td><td>${fmt(r.avg,1)}%</td><td>${fmt(r.p5,1)}%</td><td class="${j==='危険'?'red':j==='警戒'?'yellow':'green'}">${j}</td></tr>`}).join('')+'</tbody>'}
+function calc(){prog(100,'計算完了');render('us');render('jp')}function calcTap(e){e&&e.preventDefault();log('手入力値で再計算','ok');calc();return false}
+function resetTap(e){e&&e.preventDefault();location.reload();return false}
+async function text(url){let res=await fetch(url,{cache:'no-store'});if(!res.ok)throw Error(res.status);return res.text()}async function fred(code){let csv=await text('https://fred.stlouisfed.org/graph/fredgraph.csv?id='+code),ls=csv.trim().split(/\n/);for(let i=ls.length-1;i>0;i--){let p=ls[i].split(','),v=Number(p[1]);if(isFinite(v))return v}throw Error('parse')}
+async function fetchReal(e){e&&e.preventDefault();$('log').innerHTML='';prog(5,'取得開始');log('JavaScript動作OK','ok');try{prog(15,'米金利');$('us_rate').value=fmt(await fred('DGS10'));$('us_2y').value=fmt(await fred('DGS2'));prog(40,'日本金利');$('jp_rate').value=fmt(await fred('IRLTLT01JPM156N'));prog(60,'簡易ストレス値更新');$('us_policy').value=clamp((n('us_infl')-2)*2+(n('us_rate')-3.5)*1.1+4,0,10).toFixed(2);$('jp_policy').value=clamp((n('jp_infl')-2)*2.2+Math.max(0,n('jp_fx')-145)*.12+Math.max(0,n('jp_rate')-1.5)+3,0,10).toFixed(2);prog(85,'計算中');calc();log('取得できる範囲でリアルデータ反映完了','ok')}catch(err){log('外部取得失敗。手入力値で計算します: '+err.message,'ng');calc()}return false}
+window.onload=()=>{log('JavaScript動作OK。初期値で自動計算します。','ok');calc()}
+</script>
+</body>
+</html>
