@@ -49,6 +49,24 @@
         <article><span>TRACE</span><b id="traceId">—</b><small>fully replayable</small></article>
       </div>
 
+      <section class="instruction-panel" aria-labelledby="instructionTitle">
+        <div class="instruction-copy">
+          <p class="eyebrow">FREE NATURAL-LANGUAGE RANKING</p>
+          <h2 id="instructionTitle">日本語で条件を指示</h2>
+          <p>外部AIや有料APIを使わず、年齢・予算・役割・課題・即戦力／将来性をローカルで解釈します。</p>
+        </div>
+        <form id="rankingForm" class="ranking-form">
+          <label for="rankingInput">ランキング指示</label>
+          <div><input id="rankingInput" value="23歳以下、移籍金6000万ユーロ以内で、ローブロック攻略を最優先した右WGをランキング"><button type="submit">RANK</button></div>
+        </form>
+        <div class="command-examples" aria-label="指示例">
+          <button type="button" data-command="25歳以下、怪我の多い選手を除外。即戦力の6番をランキング">即戦力の6番</button>
+          <button type="button" data-command="将来性重視、5000万ユーロ以内の右WGを上位3人">将来性のある右WG</button>
+          <button type="button" data-command="ライスと共存できる8番、トランジション守備とローブロック攻略を重視">ライスと共存する8番</button>
+        </div>
+        <div id="parsedInstruction" class="parsed-instruction" aria-live="polite"></div>
+      </section>
+
       <div class="section-head">
         <div><p class="eyebrow">DIAGNOSIS</p><h2>検出した構造的弱点</h2></div>
         <p>ピア平均との差、試合数、指標信頼度を一つの優先度へ集約</p>
