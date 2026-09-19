@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "team": "Arsenal",
+    "season": "DEMO",
+    "competition": "Premier League",
+    "data_quality": "synthetic_demo",
+    "disclaimer": "Illustrative synthetic match features. Do not treat as current or historical fact.",
+    "source": "bundled-demo"
+  },
+  "matches": [
+    {"id":"demo-001","date":"2026-01-03","opponent":"Northport FC","venue":"H","opponent_shape":"low_block","result":"1-1","metrics":{"transition_xga":0.18,"rest_defence_losses":2.0,"low_block_box_entries":13.0,"central_line_breaks":8.0,"right_final_third_entries":15.0,"right_progressive_passes":20.0,"box_touches":25.0,"open_play_npxg":1.12,"aerial_win_pct":48.0,"second_ball_recovery_pct":49.0}},
+    {"id":"demo-002","date":"2026-01-10","opponent":"Riverside City","venue":"A","opponent_shape":"high_press","result":"2-2","metrics":{"transition_xga":0.41,"rest_defence_losses":4.2,"low_block_box_entries":20.0,"central_line_breaks":14.0,"right_final_third_entries":16.0,"right_progressive_passes":22.0,"box_touches":30.0,"open_play_npxg":1.76,"aerial_win_pct":51.0,"second_ball_recovery_pct":50.0}},
+    {"id":"demo-003","date":"2026-01-18","opponent":"Albion Borough","venue":"H","opponent_shape":"low_block","result":"1-0","metrics":{"transition_xga":0.15,"rest_defence_losses":1.8,"low_block_box_entries":14.0,"central_line_breaks":9.0,"right_final_third_entries":14.0,"right_progressive_passes":19.0,"box_touches":26.0,"open_play_npxg":1.21,"aerial_win_pct":46.0,"second_ball_recovery_pct":50.0}},
+    {"id":"demo-004","date":"2026-01-25","opponent":"Westbridge United","venue":"A","opponent_shape":"balanced","result":"1-2","metrics":{"transition_xga":0.48,"rest_defence_losses":4.6,"low_block_box_entries":17.0,"central_line_breaks":12.0,"right_final_third_entries":13.0,"right_progressive_passes":18.0,"box_touches":27.0,"open_play_npxg":1.35,"aerial_win_pct":44.0,"second_ball_recovery_pct":47.0}},
+    {"id":"demo-005","date":"2026-02-02","opponent":"Harbour Athletic","venue":"H","opponent_shape":"low_block","result":"2-0","metrics":{"transition_xga":0.12,"rest_defence_losses":1.5,"low_block_box_entries":16.0,"central_line_breaks":10.0,"right_final_third_entries":17.0,"right_progressive_passes":21.0,"box_touches":29.0,"open_play_npxg":1.55,"aerial_win_pct":50.0,"second_ball_recovery_pct":51.0}},
+    {"id":"demo-006","date":"2026-02-09","opponent":"Metropolitan FC","venue":"A","opponent_shape":"high_press","result":"1-1","metrics":{"transition_xga":0.38,"rest_defence_losses":3.9,"low_block_box_entries":19.0,"central_line_breaks":14.0,"right_final_third_entries":15.0,"right_progressive_passes":20.0,"box_touches":28.0,"open_play_npxg":1.44,"aerial_win_pct":47.0,"second_ball_recovery_pct":48.0}},
+    {"id":"demo-007","date":"2026-02-16","opponent":"County Wanderers","venue":"H","opponent_shape":"low_block","result":"0-0","metrics":{"transition_xga":0.10,"rest_defence_losses":1.4,"low_block_box_entries":12.0,"central_line_breaks":7.0,"right_final_third_entries":13.0,"right_progressive_passes":18.0,"box_touches":23.0,"open_play_npxg":0.93,"aerial_win_pct":45.0,"second_ball_recovery_pct":46.0}},
+    {"id":"demo-008","date":"2026-02-23","opponent":"Royal Vale","venue":"A","opponent_shape":"balanced","result":"3-1","metrics":{"transition_xga":0.31,"rest_defence_losses":3.2,"low_block_box_entries":21.0,"central_line_breaks":15.0,"right_final_third_entries":18.0,"right_progressive_passes":23.0,"box_touches":34.0,"open_play_npxg":2.05,"aerial_win_pct":52.0,"second_ball_recovery_pct":53.0}}
+  ]
+}

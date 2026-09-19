@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "grain": "team_match",
+  "dimensions": ["team", "opponent", "competition", "season", "match_date", "venue", "opponent_shape"],
+  "metrics": {
+    "transition_xga": {
+      "label_ja": "速攻からの被xG",
+      "unit": "xG/90",
+      "aggregation": "mean",
+      "direction": "lower_is_better",
+      "peer_mean": 0.22,
+      "peer_std": 0.08,
+      "weakness": "rest_defence",
+      "importance": 1.0,
+      "aliases": ["counter attack xGA", "transition chances conceded", "被カウンターxG"]
+    },
+    "rest_defence_losses": {
+      "label_ja": "危険なロスト後の突破許容",
+      "unit": "events/90",
+      "aggregation": "mean",
+      "direction": "lower_is_better",
+      "peer_mean": 2.4,
+      "peer_std": 0.75,
+      "weakness": "rest_defence",
+      "importance": 0.8,
+      "aliases": ["rest defence failure", "dangerous turnovers", "危険なロスト"]
+    },
+    "low_block_box_entries": {
+      "label_ja": "ローブロック相手のボックス侵入",
+      "unit": "entries/90",
+      "aggregation": "mean",
+      "direction": "higher_is_better",
+      "peer_mean": 18.0,
+      "peer_std": 3.0,
+      "context_filter": {"opponent_shape": "low_block"},
+      "weakness": "low_block_creation",
+      "importance": 1.0,
+      "aliases": ["box entries vs low block", "penalty area entries", "ローブロック侵入"]
+    },
+    "central_line_breaks": {
+      "label_ja": "中央ライン間への侵入",
+      "unit": "actions/90",
+      "aggregation": "mean",
+      "direction": "higher_is_better",
+      "peer_mean": 13.0,
+      "peer_std": 2.5,
+      "context_filter": {"opponent_shape": "low_block"},
+      "weakness": "low_block_creation",
+      "importance": 0.85,
+      "aliases": ["central progression", "line breaking actions", "中央侵入"]
+    },
+    "right_final_third_entries": {
+      "label_ja": "右サイドからの敵陣侵入",
+      "unit": "entries/90",
+      "aggregation": "mean",
+      "direction": "higher_is_better",
+      "peer_mean": 19.0,
+      "peer_std": 3.0,
+      "weakness": "right_progression",
+      "importance": 1.0,
+      "aliases": ["right flank progression", "right final third entries", "右サイド前進"]
+    },
+    "right_progressive_passes": {
+      "label_ja": "右側の前進パス",
+      "unit": "passes/90",
+      "aggregation": "mean",
+      "direction": "higher_is_better",
+      "peer_mean": 25.0,
+      "peer_std": 4.5,
+      "weakness": "right_progression",
+      "importance": 0.75,
+      "aliases": ["right progressive passes", "right halfspace progression", "右前進パス"]
+    },
+    "box_touches": {
+      "label_ja": "相手ボックス内タッチ",
+      "unit": "touches/90",
+      "aggregation": "mean",
+      "direction": "higher_is_better",
+      "peer_mean": 31.0,
+      "peer_std": 4.5,
+      "weakness": "box_presence",
+      "importance": 0.8,
+      "aliases": ["penalty box touches", "box occupation", "ボックスタッチ"]
+    },
+    "open_play_npxg": {
+      "label_ja": "オープンプレー非PK xG",
+      "unit": "npxG/90",
+      "aggregation": "mean",
+      "direction": "higher_is_better",
+      "peer_mean": 1.72,
+      "peer_std": 0.32,
+      "weakness": "box_presence",
+      "importance": 1.0,
+      "aliases": ["non penalty expected goals", "open play xG", "非PKxG"]
+    },
+    "aerial_win_pct": {
+      "label_ja": "空中戦勝率",
+      "unit": "%",
+      "aggregation": "weighted_mean",
+      "direction": "higher_is_better",
+      "peer_mean": 55.0,
+      "peer_std": 5.0,
+      "weakness": "duel_control",
+      "importance": 1.0,
+      "aliases": ["aerial duel win rate", "headers won", "空中戦勝率"]
+    },
+    "second_ball_recovery_pct": {
+      "label_ja": "セカンドボール回収率",
+      "unit": "%",
+      "aggregation": "weighted_mean",
+      "direction": "higher_is_better",
+      "peer_mean": 54.0,
+      "peer_std": 4.0,
+      "weakness": "duel_control",
+      "importance": 0.8,
+      "aliases": ["second ball recovery", "loose ball win rate", "セカンドボール"]
+    }
+  }
+}

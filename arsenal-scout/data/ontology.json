@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "namespace": "https://example.local/arsenal-scout#",
+  "entities": [
+    "Team",
+    "Match",
+    "Competition",
+    "Metric",
+    "Observation",
+    "Weakness",
+    "TacticalRole",
+    "Player",
+    "Club",
+    "Evidence",
+    "Source"
+  ],
+  "relations": [
+    {"type": "PLAYED_IN", "from": "Team", "to": "Match"},
+    {"type": "HAS_OBSERVATION", "from": "Match", "to": "Observation"},
+    {"type": "MEASURES", "from": "Observation", "to": "Metric"},
+    {"type": "INDICATES", "from": "Observation", "to": "Weakness"},
+    {"type": "NEEDS_ROLE", "from": "Weakness", "to": "TacticalRole"},
+    {"type": "CAN_PLAY", "from": "Player", "to": "TacticalRole"},
+    {"type": "ADDRESSES", "from": "Player", "to": "Weakness"},
+    {"type": "PLAYS_FOR", "from": "Player", "to": "Club"},
+    {"type": "SUPPORTED_BY", "from": "Weakness", "to": "Evidence"},
+    {"type": "FROM_SOURCE", "from": "Evidence", "to": "Source"}
+  ],
+  "weaknesses": {
+    "rest_defence": {
+      "label_ja": "攻撃後のトランジション守備",
+      "description": "攻撃時の配置が崩れ、ボールロスト直後に質の高い速攻を許す。",
+      "target_roles": ["transition_controller", "recovery_defender"],
+      "search_terms": ["rest defence", "transition control", "counterpress", "recovery pace", "被カウンター", "トランジション守備"]
+    },
+    "low_block_creation": {
+      "label_ja": "ローブロック攻略",
+      "description": "撤退守備に対して中央侵入、ボックス内タッチ、決定機の再現性が落ちる。",
+      "target_roles": ["creative_eight", "box_forward", "one_v_one_winger"],
+      "search_terms": ["low block", "chance creation", "box entries", "line breaking", "ローブロック", "中央攻略"]
+    },
+    "right_progression": {
+      "label_ja": "右サイドの前進性",
+      "description": "右側からのファイナルサード侵入と前進パスが左側ほど脅威にならない。",
+      "target_roles": ["right_progressor", "one_v_one_winger"],
+      "search_terms": ["right side progression", "overlap", "progressive carries", "右サイド", "前進性"]
+    },
+    "box_presence": {
+      "label_ja": "ボックス内の人数と決定力",
+      "description": "良い前進の後にボックス占有、シュート量、非PK得点期待値への変換が不足する。",
+      "target_roles": ["box_forward", "one_v_one_winger"],
+      "search_terms": ["box presence", "npxg", "box touches", "finishing", "ボックス侵入", "得点力"]
+    },
+    "duel_control": {
+      "label_ja": "空中戦・セカンドボール",
+      "description": "相手のロングボール後の競り合いと回収で試合を制御し切れない。",
+      "target_roles": ["duel_midfielder", "box_forward"],
+      "search_terms": ["aerial duel", "second ball", "physical control", "空中戦", "セカンドボール"]
+    }
+  },
+  "roles": {
+    "transition_controller": {"label_ja": "トランジション制御型6/8番", "required_metrics": {"pressure_regains": 0.30, "defensive_actions": 0.25, "retention": 0.20, "progressive_passes": 0.15, "availability": 0.10}},
+    "recovery_defender": {"label_ja": "リカバリー型DF", "required_metrics": {"recovery_pace": 0.30, "defensive_actions": 0.25, "aerial_win_pct": 0.15, "progressive_passes": 0.15, "availability": 0.15}},
+    "creative_eight": {"label_ja": "創造型8番", "required_metrics": {"line_breaking_passes": 0.30, "key_passes": 0.20, "progressive_carries": 0.15, "retention": 0.20, "pressure_regains": 0.15}},
+    "box_forward": {"label_ja": "ボックス支配型9番", "required_metrics": {"npxg": 0.30, "box_touches": 0.25, "aerial_win_pct": 0.15, "pressures": 0.15, "availability": 0.15}},
+    "one_v_one_winger": {"label_ja": "1対1突破型WG", "required_metrics": {"progressive_carries": 0.25, "take_on_success": 0.25, "box_touches": 0.15, "npxg": 0.15, "pressures": 0.10, "availability": 0.10}},
+    "right_progressor": {"label_ja": "右サイド前進役", "required_metrics": {"right_progression": 0.30, "progressive_passes": 0.20, "progressive_carries": 0.20, "retention": 0.15, "availability": 0.15}},
+    "duel_midfielder": {"label_ja": "デュエル型MF", "required_metrics": {"aerial_win_pct": 0.25, "defensive_actions": 0.25, "pressure_regains": 0.20, "retention": 0.15, "availability": 0.15}}
+  }
+}

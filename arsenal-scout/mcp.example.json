@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "arsenal-scout": {
+      "command": "python",
+      "args": ["-m", "arsenal_scout.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/Premier/arsenal-scout/src"
+      }
+    }
+  }
+}
