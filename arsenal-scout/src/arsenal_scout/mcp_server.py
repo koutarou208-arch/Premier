@@ -13,11 +13,14 @@ ENGINE = ScoutEngine()
 TOOLS = [
     {
         "name": "arsenal_analyze_weaknesses",
-        "description": "Analyze Arsenal match features, return evidence-backed weaknesses and ranked recruitment candidates.",
+        "description": "Analyze Arsenal match features and rank candidates from a free-form Japanese instruction, with evidence-backed weaknesses.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "query": {"type": "string"},
+                "query": {
+                    "type": "string",
+                    "description": "Example: 23歳以下、移籍金6000万ユーロ以内で、ローブロック攻略を最優先した右WGを上位3人"
+                },
                 "budget_m": {"type": "number", "minimum": 0},
                 "top_k": {"type": "integer", "minimum": 1, "maximum": 20}
             }

@@ -4,6 +4,7 @@ import json
 import unittest
 
 from arsenal_scout import ScoutEngine
+from arsenal_scout.instruction_parser import parse_instruction
 from arsenal_scout.mcp_server import handle
 
 
@@ -42,6 +43,44 @@ class ScoutEngineTest(unittest.TestCase):
         actual = {row["node"] for row in self.report["workflow_run"]}
         self.assertEqual(expected, actual)
         self.assertTrue(all(row["status"] == "ok" for row in self.report["workflow_run"]))
+
+    def test_free_japanese_instruction_parser(self) -> None:
+        parsed = parse_instruction(
+            "23歳以下、移籍金6,000万ユーロ以内で、ローブロック攻略を最優先した右WGを上位3人"
+        )
+        self.assertEqual(parsed["max_age"], 23)
+        self.assertEqual(parsed["max_fee_m"], 60)
+        self.assertEqual(parsed["top_n"], 3)
+        self.assertIn("one_v_one_winger", parsed["required_roles"])
+        self.assertEqual(parsed["priority_weights"]["low_block_creation"], 2.4)
+        self.assertNotIn("right_progression", parsed["priority_weights"])
+
+    def test_instruction_filters_and_ranks_candidates(self) -> None:
+        report = self.engine.analyze(
+            query="23歳以下、移籍金6000万ユーロ以内で、ローブロック攻略を最優先した右WGをランキング",
+            top_k=6,
+        )
+        self.assertTrue(report["candidates"])
+        self.assertEqual(report["instruction"]["max_age"], 23)
+        for candidate in report["candidates"]:
+            self.assertLessEqual(candidate["age"], 23)
+            self.assertLessEqual(candidate["estimated_fee_m"], 60)
+            self.assertTrue(
+                {"one_v_one_winger", "right_progressor"}.intersection(candidate["roles"])
+            )
+
+    def test_ready_six_excludes_low_availability(self) -> None:
+        parsed = parse_instruction("25歳以下、怪我の多い選手を除外。即戦力の6番をランキング")
+        self.assertEqual(parsed["mode"], "ready")
+        self.assertEqual(parsed["min_availability"], 82)
+        self.assertIn("transition_controller", parsed["required_roles"])
+        report = self.engine.analyze(query=parsed["original"])
+        self.assertTrue(all(candidate["availability_score"] >= 82 for candidate in report["candidates"]))
+
+    def test_impossible_instruction_returns_empty_ranking(self) -> None:
+        report = self.engine.analyze(query="18歳以下、予算1000万ユーロ以内の右WG")
+        self.assertEqual(report["candidates"], [])
+        self.assertIn("候補を生成できませんでした", report["summary"]["summary"])
 
     def test_mcp_tools_list_and_call(self) -> None:
         listing = handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})

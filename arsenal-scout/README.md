@@ -15,6 +15,16 @@ PYTHONPATH=src python -m arsenal_scout --port 8765
 
 ブラウザで `http://127.0.0.1:8765` を開きます。
 
+画面上部の入力欄へ、たとえば次のように日本語で指示できます。
+
+```text
+23歳以下、移籍金6000万ユーロ以内で、ローブロック攻略を最優先した右WGを上位3人
+25歳以下、怪我の多い選手を除外。即戦力の6番をランキング
+ライスと共存できる8番、トランジション守備とローブロック攻略を重視
+```
+
+解析は正規表現と辞書による決定論的なローカル処理です。外部LLM・埋め込みAPI・有料DBは使わず、入力文も外部へ送信しません。認識した条件は画面とAPI応答の `instruction` に表示され、未対応の表現を勝手にハード条件へ変換しません。
+
 テスト:
 
 ```bash
@@ -32,13 +42,14 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 | GraphRAG | `Weakness → Role → Player` と試合根拠をサブグラフ化し、説明経路を返却 |
 | オントロジー | エンティティ、関係、弱点、戦術ロール、必要指標をJSONでバージョン管理 |
 | セマンティックレイヤー | 指標の粒度、単位、集約、良悪方向、ピア基準、文脈フィルタを一元化 |
-| ワークフローグラフ | validate → diagnose → retrieve/rank → graph_expand → explain の再実行可能DAG |
+| ワークフローグラフ | validate → parse_instruction / diagnose → retrieve / rank → graph_expand → explain の再実行可能DAG |
+| 自然言語ランキング | 日本語から年齢、予算、役割、重点課題、稼働率、即戦力／将来性、上位件数を無料のローカルルールで抽出 |
 | Observability | trace/span、ノード遅延、エラー、件数、直近スコアをAPIと画面で確認 |
 | MCP | 分析、根拠検索、GraphRAG、health の4ツールをstdio JSON-RPCで公開 |
 
 ## API
 
-- `GET /api/report?budget_m=80&q=...` — 全分析
+- `GET /api/report?budget_m=80&q=...` — 自然言語条件を含む全分析
 - `GET /api/search?q=...&kind=player` — ハイブリッド検索
 - `GET /api/graph` — Knowledge Graph全体
 - `GET /api/workflow` — ワークフローDAG
@@ -85,6 +96,7 @@ arsenal-scout/
 │   ├── hybrid_search.py     # BM25 + vectors + query expansion
 │   ├── knowledge_graph.py   # property graph + GraphRAG paths
 │   ├── ranking.py           # role-aware candidate scoring
+│   ├── instruction_parser.py # free Japanese command parser
 │   ├── workflow.py          # deterministic DAG
 │   ├── observability.py     # traces, metrics, latency
 │   ├── engine.py            # orchestration facade
@@ -101,3 +113,4 @@ arsenal-scout/
 - 価格は予測値ではなく別モデル/一次情報に分離すべきです。
 - 推薦は選手の人格、医療情報、代理人事情を推測しません。
 - ランキングは意思決定支援であり、自動獲得判断ではありません。
+- 無料版の自然言語解析は対応語彙が明示されたルール方式です。自由な言い換えを広く扱う場合は、将来LLMを任意の差し替えアダプタとして追加します。

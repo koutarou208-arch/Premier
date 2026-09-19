@@ -5,6 +5,8 @@
 ```mermaid
 flowchart LR
     A[Match & player providers] --> B[Validation / canonical IDs]
+    Q[Japanese instruction] --> P[Local rule parser]
+    P --> F
     B --> C[Semantic layer]
     C --> D[Weakness diagnosis]
     D --> E[Role requirements]
@@ -63,6 +65,8 @@ For each detected weakness:
 3. The candidate's best role fit is calculated from positional percentiles.
 4. Tactical fit is blended with availability, age profile and budget fit.
 5. Confidence is capped when source data is synthetic, sparse or stale.
+
+Before scoring, the local instruction parser can apply explicit age, fee, availability and role constraints. Named weaknesses change their severity weights, while `即戦力` and `将来性` select different transparent score blends. The parser is deterministic, requires no paid API and returns every recognized condition for review.
 
 This is a ranking aid, not an autonomous transfer decision. Scouting video, medical history, character, contract detail and tactical interviews remain required gates.
 

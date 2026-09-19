@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .hybrid_search import HybridIndex, build_documents
+from .instruction_parser import parse_instruction
 from .knowledge_graph import KnowledgeGraph, build_graph
 from .observability import TraceStore, utc_now
 from .ranking import CandidateRanker
@@ -64,6 +65,12 @@ class ScoutEngine:
         workflow = WorkflowGraph(self.traces)
         workflow.add("validate", (), lambda state: self._validate(), "Validate schema, metric IDs and tactical roles")
         workflow.add(
+            "parse_instruction",
+            ("validate",),
+            lambda state: parse_instruction(state.get("query", "")),
+            "Parse Japanese ranking instructions locally without an external LLM",
+        )
+        workflow.add(
             "diagnose",
             ("validate",),
             lambda state: self.semantic.diagnose(self.match_data),
@@ -72,20 +79,26 @@ class ScoutEngine:
 
         def retrieve(state: dict[str, Any]) -> list[dict[str, Any]]:
             labels = " ".join(item["label"] for item in state["diagnose"][:3])
-            query = state.get("query") or f"Arsenal weaknesses {labels} recruitment profile"
+            query = state["parse_instruction"]["original"] or f"Arsenal weaknesses {labels} recruitment profile"
             return self.index.search(query, top_k=state.get("retrieval_k", 10))
 
-        workflow.add("retrieve", ("diagnose",), retrieve, "Hybrid BM25 and vector retrieval with ontology query expansion")
+        workflow.add(
+            "retrieve",
+            ("diagnose", "parse_instruction"),
+            retrieve,
+            "Hybrid BM25 and vector retrieval with ontology query expansion",
+        )
         workflow.add(
             "rank",
-            ("diagnose",),
+            ("diagnose", "parse_instruction"),
             lambda state: self.ranker.rank(
                 self.players_data["players"],
                 state["diagnose"],
                 budget_m=state.get("budget_m", 80.0),
                 top_k=state.get("top_k", 6),
+                instruction=state["parse_instruction"],
             ),
-            "Rank market candidates against severity-weighted role requirements",
+            "Filter and rank candidates from parsed constraints and severity-weighted role requirements",
         )
 
         def graph_expand(state: dict[str, Any]) -> dict[str, Any]:
@@ -158,6 +171,7 @@ class ScoutEngine:
                 "weaknesses": state["diagnose"],
                 "priority_count": len(priorities),
                 "candidates": state["rank"],
+                "instruction": state["parse_instruction"],
                 "retrieval": state["retrieve"],
                 "graphrag": state["graph_expand"],
                 "workflow_run": workflow_run,
@@ -167,6 +181,7 @@ class ScoutEngine:
                 {
                     "priority_count": len(priorities),
                     "candidate_count": len(state["rank"]),
+                    "instruction_conditions": len(state["parse_instruction"]["labels"]),
                     "retrieval_hits": len(state["retrieve"]),
                     "graph_nodes": len(state["graph_expand"]["nodes"]),
                 }
