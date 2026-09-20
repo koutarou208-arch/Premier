@@ -12,7 +12,10 @@
     "Player",
     "Club",
     "Evidence",
-    "Source"
+    "Source",
+    "FinancialSnapshot",
+    "FinancialConstraint",
+    "ProjectedDeal"
   ],
   "relations": [
     {"type": "PLAYED_IN", "from": "Team", "to": "Match"},
@@ -24,7 +27,11 @@
     {"type": "ADDRESSES", "from": "Player", "to": "Weakness"},
     {"type": "PLAYS_FOR", "from": "Player", "to": "Club"},
     {"type": "SUPPORTED_BY", "from": "Weakness", "to": "Evidence"},
-    {"type": "FROM_SOURCE", "from": "Evidence", "to": "Source"}
+    {"type": "FROM_SOURCE", "from": "Evidence", "to": "Source"},
+    {"type": "HAS_FINANCIAL_SNAPSHOT", "from": "Team", "to": "FinancialSnapshot"},
+    {"type": "DEFINES_CONSTRAINT", "from": "FinancialSnapshot", "to": "FinancialConstraint"},
+    {"type": "EVALUATES_DEAL", "from": "FinancialSnapshot", "to": "ProjectedDeal"},
+    {"type": "HAS_PROJECTED_DEAL", "from": "Player", "to": "ProjectedDeal"}
   ],
   "weaknesses": {
     "rest_defence": {

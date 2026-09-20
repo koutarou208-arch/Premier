@@ -7,6 +7,8 @@ flowchart LR
     A[Match & player providers] --> B[Validation / canonical IDs]
     Q[Japanese instruction] --> P[Local rule parser]
     P --> F
+    N[Club finance snapshot] --> O[Financial capacity]
+    O --> F
     B --> C[Semantic layer]
     C --> D[Weakness diagnosis]
     D --> E[Role requirements]
@@ -19,6 +21,7 @@ flowchart LR
     D --> K[Knowledge graph]
     J --> K
     F --> K
+    O --> K
     K --> L[GraphRAG answer]
     L --> M[API / MCP / dashboard]
 ```
@@ -28,6 +31,7 @@ The local prototype is dependency-free and runs everything in memory. The interf
 | Concern | Local prototype | Production replacement |
 |---|---|---|
 | Raw storage | Versioned JSON | S3/GCS + Iceberg/Delta |
+| Club finance | Transparent local capacity model | Audited accounts + PSR/FFP planning service |
 | Metric model | `semantic_metrics.json` | dbt Semantic Layer / MetricFlow |
 | Keyword search | In-process BM25 | OpenSearch / Elasticsearch |
 | Vectors | Stable 384-d hash embedding | Sentence Transformer or managed embedding + pgvector |
@@ -52,6 +56,7 @@ The recommendation path is:
 
 ```text
 Arsenal → Match → Metric observation → Weakness → Required role → Candidate
+Arsenal → Financial snapshot → Projected deal → Candidate
 ```
 
 The UI and MCP response include those paths. A generative model can phrase the answer, but it should not introduce a recommendation unless it can cite at least one path and the underlying source quality.
@@ -63,10 +68,12 @@ For each detected weakness:
 1. Severity selects and weights the relevant target roles.
 2. Each role has a versioned metric-weight profile in the ontology.
 3. The candidate's best role fit is calculated from positional percentiles.
-4. Tactical fit is blended with availability, age profile and budget fit.
-5. Confidence is capped when source data is synthetic, sparse or stale.
+4. The club snapshot derives usable recruitment budget from budget, committed spend, expected sales and a protected reserve.
+5. Each deal estimates annual amortization, wage use, first-year cost and budget remaining after the signing.
+6. Tactical fit is blended with availability, age profile and financial fit.
+7. Confidence is capped when source data is synthetic, sparse or stale.
 
-Before scoring, the local instruction parser can apply explicit age, fee, availability and role constraints. Named weaknesses change their severity weights, while `即戦力` and `将来性` select different transparent score blends. The parser is deterministic, requires no paid API and returns every recognized condition for review.
+Before scoring, the local instruction parser can apply explicit age, fee, availability and role constraints. Named weaknesses change their severity weights, while `即戦力`, `将来性` and `費用対効果` select different transparent score blends. The parser is deterministic, requires no paid API and returns every recognized condition for review.
 
 This is a ranking aid, not an autonomous transfer decision. Scouting video, medical history, character, contract detail and tactical interviews remain required gates.
 

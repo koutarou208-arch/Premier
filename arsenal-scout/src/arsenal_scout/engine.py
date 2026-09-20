@@ -6,6 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from .finance import summarize_finance
 from .hybrid_search import HybridIndex, build_documents
 from .instruction_parser import parse_instruction
 from .knowledge_graph import KnowledgeGraph, build_graph
@@ -34,10 +35,17 @@ class ScoutEngine:
         self.metric_catalog = load_json(root / "semantic_metrics.json")
         self.match_data = load_json(root / "matches.demo.json")
         self.players_data = load_json(root / "players.demo.json")
+        self.club_finance = summarize_finance(load_json(root / "club_finance.demo.json"))
         self.traces = TraceStore()
         self.semantic = SemanticLayer(self.metric_catalog, self.ontology)
         self.ranker = CandidateRanker(self.ontology)
-        documents = build_documents(self.match_data, self.players_data, self.ontology, self.metric_catalog)
+        documents = build_documents(
+            self.match_data,
+            self.players_data,
+            self.ontology,
+            self.metric_catalog,
+            self.club_finance,
+        )
         self.index = HybridIndex(documents, self.ontology)
         self._last_graph: KnowledgeGraph | None = None
         self._last_report: dict[str, Any] | None = None
@@ -54,11 +62,16 @@ class ScoutEngine:
             unknown_roles = set(player["roles"]) - role_ids
             if unknown_roles:
                 raise ValueError(f"Unknown roles for {player['id']}: {sorted(unknown_roles)}")
+            if float(player.get("estimated_annual_wage_m", 0)) < 0:
+                raise ValueError(f"Negative wage estimate for {player['id']}")
+        if self.club_finance["usable_transfer_budget_m"] <= 0:
+            raise ValueError("Usable recruitment budget must be positive")
         return {
             "matches": len(self.match_data["matches"]),
             "players": len(self.players_data["players"]),
             "metrics": len(metric_ids),
             "data_quality": self.match_data["meta"]["data_quality"],
+            "finance_data_quality": self.club_finance["meta"]["data_quality"],
         }
 
     def _build_workflow(self) -> WorkflowGraph:
@@ -76,6 +89,12 @@ class ScoutEngine:
             lambda state: self.semantic.diagnose(self.match_data),
             "Compare Arsenal match features with semantic peer baselines",
         )
+        workflow.add(
+            "finance",
+            ("validate",),
+            lambda state: deepcopy(self.club_finance),
+            "Calculate usable transfer budget and wage capacity",
+        )
 
         def retrieve(state: dict[str, Any]) -> list[dict[str, Any]]:
             labels = " ".join(item["label"] for item in state["diagnose"][:3])
@@ -84,7 +103,7 @@ class ScoutEngine:
 
         workflow.add(
             "retrieve",
-            ("diagnose", "parse_instruction"),
+            ("diagnose", "parse_instruction", "finance"),
             retrieve,
             "Hybrid BM25 and vector retrieval with ontology query expansion",
         )
@@ -97,12 +116,20 @@ class ScoutEngine:
                 budget_m=state.get("budget_m", 80.0),
                 top_k=state.get("top_k", 6),
                 instruction=state["parse_instruction"],
+                club_finance=state["finance"],
             ),
             "Filter and rank candidates from parsed constraints and severity-weighted role requirements",
         )
 
         def graph_expand(state: dict[str, Any]) -> dict[str, Any]:
-            graph = build_graph(self.match_data, self.players_data, self.ontology, state["diagnose"])
+            graph = build_graph(
+                self.match_data,
+                self.players_data,
+                self.ontology,
+                state["diagnose"],
+                state["finance"],
+                state["rank"],
+            )
             self._last_graph = graph
             weakness_ids = [item["id"] for item in state["diagnose"] if item["status"] != "strength"][:4]
             candidate_ids = [item["player_id"] for item in state["rank"]]
@@ -118,16 +145,22 @@ class ScoutEngine:
         def explain(state: dict[str, Any]) -> dict[str, Any]:
             priorities = [item for item in state["diagnose"] if item["status"] == "priority"][:3]
             leaders = state["rank"][:3]
+            finance = state["finance"]
             return {
                 "summary": (
-                    f"{len(priorities)}件を優先課題として検出。"
-                    f"最上位候補は {leaders[0]['name']}（適合度 {leaders[0]['score']}）です。"
+                    f"{len(priorities)}件の優先課題と、使用可能な補強予算"
+                    f"{finance['usable_transfer_budget_m']:g}百万ユーロを反映しました。"
+                    f"最上位は{leaders[0]['name']}（総合評価 {leaders[0]['score']}）です。"
                     if leaders
-                    else "候補を生成できませんでした。"
+                    else "指定された条件を満たす候補は見つかりませんでした。"
                 ),
                 "priority_weaknesses": [item["label"] for item in priorities],
                 "candidate_headline": [f"{item['rank']}. {item['name']} — {item['why']}" for item in leaders],
-                "evidence_rule": "Every claim must resolve to a match metric, semantic definition or player profile node.",
+                "financial_context": (
+                    f"年間賃金の余力は{finance['annual_wage_headroom_m']:g}百万ユーロです。"
+                    "移籍金、推定年俸、契約年数を候補評価に含めています。"
+                ),
+                "evidence_rule": "推薦理由は、試合指標、意味定義、選手プロフィール、財政スナップショットのいずれかに接続します。",
             }
 
         workflow.add(
@@ -172,6 +205,7 @@ class ScoutEngine:
                 "priority_count": len(priorities),
                 "candidates": state["rank"],
                 "instruction": state["parse_instruction"],
+                "club_finance": state["finance"],
                 "retrieval": state["retrieve"],
                 "graphrag": state["graph_expand"],
                 "workflow_run": workflow_run,
@@ -225,6 +259,7 @@ class ScoutEngine:
             "semantic_metrics": len(self.metric_catalog["metrics"]),
             "ontology_entities": len(self.ontology["entities"]),
             "workflow_nodes": len(self.workflow.nodes),
+            "usable_transfer_budget_m": self.club_finance["usable_transfer_budget_m"],
         }
 
     def semantic_catalog(self) -> dict[str, Any]:

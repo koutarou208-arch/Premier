@@ -154,6 +154,7 @@ def build_documents(
     players_data: dict[str, Any],
     ontology: dict[str, Any],
     metrics: dict[str, Any],
+    finance_data: dict[str, Any] | None = None,
 ) -> list[Document]:
     docs: list[Document] = []
     for match in match_data["matches"]:
@@ -189,8 +190,33 @@ def build_documents(
                 id=f"player:{player['id']}",
                 kind="player",
                 title=player["name"],
-                text=f"roles {' '.join(player['roles'])} {' '.join(role_labels)}; side {player['preferred_side']}; {metric_text}",
+                text=(
+                    f"roles {' '.join(player['roles'])} {' '.join(role_labels)}; "
+                    f"side {player['preferred_side']}; transfer fee {player['estimated_fee_m']}M; "
+                    f"annual wage {player.get('estimated_annual_wage_m', 0)}M; {metric_text}"
+                ),
                 metadata={"player_id": player["id"], "roles": player["roles"], "club": player["club"]},
+            )
+        )
+    if finance_data:
+        docs.append(
+            Document(
+                id="finance:arsenal-demo",
+                kind="finance",
+                title="クラブの補強余力（デモ）",
+                text=(
+                    f"移籍予算 {finance_data['transfer_budget_m']}Mユーロ、"
+                    f"確定済み支出 {finance_data['committed_transfer_spend_m']}Mユーロ、"
+                    f"売却見込み {finance_data['expected_sales_m']}Mユーロ、"
+                    f"予備費 {finance_data['protected_cash_reserve_m']}Mユーロ、"
+                    f"使用可能な補強予算 {finance_data['usable_transfer_budget_m']}Mユーロ、"
+                    f"年間賃金余力 {finance_data['annual_wage_headroom_m']}Mユーロ。"
+                    f"{finance_data['policy']['description_ja']}"
+                ),
+                metadata={
+                    "club": finance_data["club"],
+                    "data_quality": finance_data["meta"]["data_quality"],
+                },
             )
         )
     return docs

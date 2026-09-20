@@ -26,12 +26,36 @@ class ScoutEngineTest(unittest.TestCase):
         self.assertEqual(scores, sorted(scores, reverse=True))
         self.assertTrue(all(0 <= score <= 100 for score in scores))
         self.assertTrue(all(candidate["why"] and candidate["risk"] for candidate in self.report["candidates"]))
+        self.assertTrue(all("financial_assessment" in candidate for candidate in self.report["candidates"]))
+        self.assertTrue(all(0 <= candidate["financial_fit"] <= 100 for candidate in self.report["candidates"]))
+
+    def test_club_finance_is_included_in_ranking(self) -> None:
+        finance = self.report["club_finance"]
+        self.assertEqual(finance["usable_transfer_budget_m"], 71)
+        self.assertEqual(
+            finance["usable_transfer_budget_m"],
+            finance["transfer_budget_m"]
+            - finance["committed_transfer_spend_m"]
+            + finance["expected_sales_m"]
+            - finance["protected_cash_reserve_m"],
+        )
+        self.assertTrue(self.report["graphrag"]["financial_paths"])
+
+    def test_financial_priority_changes_score_blend(self) -> None:
+        report = self.engine.analyze(query="財政負担を抑え、費用対効果を重視してランキング", top_k=8)
+        self.assertTrue(report["instruction"]["financial_priority"])
+        ranks = {candidate["player_id"]: candidate["rank"] for candidate in report["candidates"]}
+        self.assertGreater(ranks["p-okafor"], 3)
 
     def test_hybrid_search_returns_score_components(self) -> None:
         results = self.engine.search("ローブロックを崩す右サイドの前進役", top_k=5)
         self.assertEqual(len(results), 5)
         self.assertTrue(any(result["kind"] == "player" for result in results))
         self.assertTrue(all("lexical_score" in result and "vector_score" in result for result in results))
+
+    def test_hybrid_search_can_retrieve_financial_context(self) -> None:
+        results = self.engine.search("クラブの移籍予算と賃金余力", top_k=5)
+        self.assertTrue(any(result["kind"] == "finance" for result in results))
 
     def test_graphrag_paths_connect_weaknesses_to_players(self) -> None:
         paths = self.report["graphrag"]["paths"]
@@ -80,7 +104,7 @@ class ScoutEngineTest(unittest.TestCase):
     def test_impossible_instruction_returns_empty_ranking(self) -> None:
         report = self.engine.analyze(query="18歳以下、予算1000万ユーロ以内の右WG")
         self.assertEqual(report["candidates"], [])
-        self.assertIn("候補を生成できませんでした", report["summary"]["summary"])
+        self.assertIn("候補は見つかりませんでした", report["summary"]["summary"])
 
     def test_mcp_tools_list_and_call(self) -> None:
         listing = handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})

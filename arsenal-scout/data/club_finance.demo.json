@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "data_quality": "synthetic_demo",
+    "disclaimer": "All budget, wage and deal-planning figures are fictional demonstration data.",
+    "source": "bundled-demo",
+    "currency": "EUR",
+    "season": "DEMO 2026/27"
+  },
+  "club": "Arsenal",
+  "transfer_budget_m": 95,
+  "committed_transfer_spend_m": 26,
+  "expected_sales_m": 14,
+  "protected_cash_reserve_m": 12,
+  "annual_wage_headroom_m": 17,
+  "max_single_fee_guideline_m": 60,
+  "default_contract_years": 5,
+  "policy": {
+    "minimum_financial_fit": 45,
+    "description_ja": "補強予算と賃金枠を使い切らず、シーズン中の追加対応に備える。"
+  }
+}
