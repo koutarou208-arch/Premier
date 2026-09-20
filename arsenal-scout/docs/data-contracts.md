@@ -33,6 +33,8 @@ The prototype consumes 0–100 positional percentiles. Production ingestion shou
   "league": "Competition",
   "age": 23,
   "estimated_fee_m": 55,
+  "estimated_annual_wage_m": 6.5,
+  "contract_years": 5,
   "availability": 88,
   "roles": ["right_progressor"],
   "metrics": {
@@ -42,6 +44,25 @@ The prototype consumes 0–100 positional percentiles. Production ingestion shou
   }
 }
 ```
+
+## Club finance snapshot
+
+The local finance model expects a season-level planning snapshot. Values are in millions of the declared currency.
+
+```json
+{
+  "club": "Arsenal",
+  "transfer_budget_m": 95,
+  "committed_transfer_spend_m": 26,
+  "expected_sales_m": 14,
+  "protected_cash_reserve_m": 12,
+  "annual_wage_headroom_m": 17,
+  "max_single_fee_guideline_m": 60,
+  "default_contract_years": 5
+}
+```
+
+`usable_transfer_budget_m` is derived rather than entered directly. Production finance adapters should preserve the reporting period, currency, source document, accounting policy and approval status. PSR/FFP headroom must come from a separately reviewed rules engine; the prototype does not infer regulatory compliance.
 
 ## Provider boundary
 

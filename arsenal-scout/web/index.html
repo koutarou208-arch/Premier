@@ -3,135 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#09110e">
-  <title>Arsenal Scout Intelligence</title>
+  <meta name="theme-color" content="#212121">
+  <meta name="description" content="試合データとクラブ財政から補強候補を比較する対話型スカウティングデモ">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23212121'/%3E%3Cpath d='M32 10 52 52H42l-4-9H26l-4 9H12L32 10Zm0 14-4 11h8L32 24Z' fill='%23ef4444'/%3E%3C/svg%3E">
+  <title>Arsenal Scout</title>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/chat.css">
 </head>
 <body>
-  <div class="noise"></div>
-  <header class="topbar">
-    <a class="brand" href="#" aria-label="Arsenal Scout home">
-      <span class="brand-mark">A</span>
-      <span><b>ARSENAL SCOUT</b><small>RECRUITMENT INTELLIGENCE</small></span>
-    </a>
-    <div class="top-status"><span class="live-dot"></span><span id="healthText">ENGINE CONNECTING</span></div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div>
-        <p class="eyebrow">EVIDENCE → WEAKNESS → ROLE → PLAYER</p>
-        <h1>補強を、印象ではなく<br><em>証拠の経路</em>で決める。</h1>
-        <p class="hero-copy">試合ごとの構造的な弱点を検出し、戦術ロールに翻訳。ハイブリッド検索とKnowledge Graphを横断して、市場候補を説明可能な形で並べます。</p>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="メニュー">
+      <div class="sidebar-top">
+        <button class="new-chat" id="newChat" type="button"><span>＋</span> 新しい分析</button>
+        <button class="sidebar-close" id="sidebarClose" type="button" aria-label="メニューを閉じる">×</button>
       </div>
-      <div class="hero-orbit" aria-hidden="true">
-        <div class="orbit orbit-a"><span>STATS</span></div>
-        <div class="orbit orbit-b"><span>RAG</span></div>
-        <div class="orbit orbit-c"><span>GRAPH</span></div>
-        <div class="core">A</div>
-      </div>
-    </section>
-
-    <div class="demo-warning" id="disclaimer">データを読み込んでいます…</div>
-
-    <nav class="tabs" aria-label="Dashboard sections">
-      <button class="tab active" data-panel="mission">01 / MISSION CONTROL</button>
-      <button class="tab" data-panel="search">02 / HYBRID SEARCH</button>
-      <button class="tab" data-panel="graph">03 / GRAPH RAG</button>
-      <button class="tab" data-panel="system">04 / SYSTEM</button>
-    </nav>
-
-    <section class="panel active" id="panel-mission">
-      <div class="metric-strip">
-        <article><span>PRIORITY SIGNALS</span><b id="priorityCount">—</b><small>semantic diagnosis</small></article>
-        <article><span>MARKET PROFILES</span><b id="candidateCount">—</b><small>ranked candidates</small></article>
-        <article><span>GRAPH PATHS</span><b id="pathCount">—</b><small>grounded explanations</small></article>
-        <article><span>TRACE</span><b id="traceId">—</b><small>fully replayable</small></article>
-      </div>
-
-      <section class="instruction-panel" aria-labelledby="instructionTitle">
-        <div class="instruction-copy">
-          <p class="eyebrow">FREE NATURAL-LANGUAGE RANKING</p>
-          <h2 id="instructionTitle">日本語で条件を指示</h2>
-          <p>外部AIや有料APIを使わず、年齢・予算・役割・課題・即戦力／将来性をローカルで解釈します。</p>
-        </div>
-        <form id="rankingForm" class="ranking-form">
-          <label for="rankingInput">ランキング指示</label>
-          <div><input id="rankingInput" value="23歳以下、移籍金6000万ユーロ以内で、ローブロック攻略を最優先した右WGをランキング"><button type="submit">RANK</button></div>
-        </form>
-        <div class="command-examples" aria-label="指示例">
-          <button type="button" data-command="25歳以下、怪我の多い選手を除外。即戦力の6番をランキング">即戦力の6番</button>
-          <button type="button" data-command="将来性重視、5000万ユーロ以内の右WGを上位3人">将来性のある右WG</button>
-          <button type="button" data-command="ライスと共存できる8番、トランジション守備とローブロック攻略を重視">ライスと共存する8番</button>
-        </div>
-        <div id="parsedInstruction" class="parsed-instruction" aria-live="polite"></div>
+      <nav class="side-nav" aria-label="分析メニュー">
+        <p>分析ツール</p>
+        <button class="side-item active" data-action="scout" type="button"><span>A</span>補強候補を探す</button>
+        <button class="side-item" data-action="finance" type="button"><span>€</span>クラブ財政を確認</button>
+        <button class="side-item" data-action="weakness" type="button"><span>↗</span>チームの弱点を確認</button>
+        <button class="side-item" data-action="evidence" type="button"><span>◇</span>推薦の根拠を確認</button>
+        <button class="side-item" data-action="system" type="button"><span>⌘</span>分析の仕組みを見る</button>
+      </nav>
+      <section class="history" aria-labelledby="historyTitle">
+        <p id="historyTitle">質問例</p>
+        <button type="button" data-command="財政負担を抑えながら、ローブロックを崩せる右WGをランキング">財政に無理のない右WG</button>
+        <button type="button" data-command="25歳以下で、稼働率の高い即戦力の6番をランキング">即戦力として使える6番</button>
+        <button type="button" data-command="ライスと共存できる8番を、費用対効果も含めてランキング">ライスと共存できる8番</button>
       </section>
+      <div class="sidebar-note"><strong>デモ環境</strong><span>試合、選手、移籍金、年俸、クラブ財政はすべて架空です。</span></div>
+    </aside>
 
-      <div class="section-head">
-        <div><p class="eyebrow">DIAGNOSIS</p><h2>検出した構造的弱点</h2></div>
-        <p>ピア平均との差、試合数、指標信頼度を一つの優先度へ集約</p>
-      </div>
-      <div class="weakness-grid" id="weaknessGrid"><div class="skeleton"></div></div>
+    <button class="sidebar-overlay" id="sidebarOverlay" type="button" aria-label="メニューを閉じる"></button>
 
-      <div class="section-head candidates-head">
-        <div><p class="eyebrow">SHORTLIST</p><h2>補強候補ランキング</h2></div>
-        <label class="budget">予算上限 <input id="budgetInput" type="range" min="20" max="120" step="5" value="80"><b><span id="budgetValue">80</span>M</b></label>
-      </div>
-      <div class="candidate-list" id="candidateList"><div class="skeleton"></div></div>
+    <section class="workspace">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" type="button" aria-label="メニューを開く">☰</button>
+        <button class="model-button" type="button" aria-label="現在の分析モデル">Arsenal Scout <span>Demo</span></button>
+        <div class="finance-state"><i></i><span id="healthText">分析エンジンに接続中</span></div>
+      </header>
+      <main class="conversation" id="conversation" aria-live="polite"><div class="loading-message">分析画面を準備しています…</div></main>
+      <footer class="composer-area">
+        <form class="composer" id="chatForm">
+          <textarea id="chatInput" rows="1" aria-label="スカウト条件を入力" placeholder="補強条件を日本語で入力してください"></textarea>
+          <button class="send-button" id="sendButton" type="submit" aria-label="送信">↑</button>
+        </form>
+        <p>回答には架空のデモデータを使用しています。実際の獲得判断には使えません。</p>
+      </footer>
     </section>
+  </div>
 
-    <section class="panel" id="panel-search">
-      <div class="section-head">
-        <div><p class="eyebrow">BM25 × VECTOR × ONTOLOGY</p><h2>根拠を横断検索</h2></div>
-        <p>語句一致と意味類似を融合し、オントロジー語彙でクエリを拡張</p>
-      </div>
-      <form class="search-box" id="searchForm">
-        <input id="searchInput" value="ローブロックを崩せる右サイドの選手" aria-label="Search evidence">
-        <button type="submit">SEARCH EVIDENCE</button>
-      </form>
-      <div class="search-legend"><span><i class="lexical"></i>Lexical</span><span><i class="vector"></i>Vector</span><span><i class="fused"></i>Fused</span></div>
-      <div id="searchResults" class="search-results"></div>
-    </section>
-
-    <section class="panel" id="panel-graph">
-      <div class="section-head">
-        <div><p class="eyebrow">GRAPH RAG CONTEXT</p><h2>推薦理由の経路</h2></div>
-        <p>弱点から必要ロール、候補選手までの接続をそのまま提示</p>
-      </div>
-      <div class="graph-shell">
-        <div class="graph-key"><span class="team">TEAM</span><span class="weakness">WEAKNESS</span><span class="role">ROLE</span><span class="player">PLAYER</span></div>
-        <svg id="knowledgeGraph" viewBox="0 0 1120 620" role="img" aria-label="Knowledge graph"></svg>
-      </div>
-      <div class="path-list" id="pathList"></div>
-    </section>
-
-    <section class="panel" id="panel-system">
-      <div class="section-head">
-        <div><p class="eyebrow">OBSERVABILITY & GOVERNANCE</p><h2>AIの中身を監視する</h2></div>
-        <p>各ノードの遅延、検索件数、データ品質、判断履歴を可視化</p>
-      </div>
-      <div class="system-grid">
-        <article class="system-card"><h3>Workflow graph</h3><div id="workflowGraph" class="workflow"></div></article>
-        <article class="system-card"><h3>Runtime telemetry</h3><div id="telemetry" class="telemetry"></div></article>
-      </div>
-      <article class="system-card trace-card"><h3>Recent spans</h3><div class="table-wrap"><table><thead><tr><th>Span</th><th>Status</th><th>Latency</th><th>Trace</th></tr></thead><tbody id="spanRows"></tbody></table></div></article>
-      <div class="architecture-grid">
-        <article><b>SEMANTIC LAYER</b><span>指標の意味・粒度・方向・基準値を統一</span></article>
-        <article><b>ONTOLOGY</b><span>Team / Match / Weakness / Role / Player の語彙を定義</span></article>
-        <article><b>HYBRID RAG</b><span>BM25 とベクトル類似度を融合</span></article>
-        <article><b>GRAPH RAG</b><span>検索結果を関係グラフで拡張・根拠化</span></article>
-        <article><b>MCP SERVER</b><span>他のAIエージェントから分析機能を呼び出し</span></article>
-        <article><b>OBSERVABILITY</b><span>trace / latency / errors / quality を記録</span></article>
-      </div>
-    </section>
-  </main>
-
-  <dialog id="candidateDialog">
-    <button class="dialog-close" aria-label="Close">×</button>
-    <div id="candidateDetail"></div>
-  </dialog>
-
-  <footer><span>ARSENAL SCOUT / PROTOTYPE 0.1</span><span>Every score needs a traceable reason.</span></footer>
+  <dialog id="candidateDialog"><button class="dialog-close" type="button" aria-label="閉じる">×</button><div id="candidateDetail"></div></dialog>
   <script src="/app.js" defer></script>
 </body>
 </html>

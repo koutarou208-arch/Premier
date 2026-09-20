@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .finance import assess_deal
+
 
 def clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
@@ -37,6 +39,7 @@ class CandidateRanker:
         budget_m: float = 80.0,
         top_k: int = 6,
         instruction: dict[str, Any] | None = None,
+        club_finance: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         instruction = instruction or {}
         priority_weights = instruction.get("priority_weights", {})
@@ -61,6 +64,7 @@ class CandidateRanker:
         min_availability = instruction.get("min_availability")
         scoring_budget = min(float(budget_m), float(max_fee)) if max_fee is not None else float(budget_m)
         mode = instruction.get("mode", "balanced")
+        financial_priority = bool(instruction.get("financial_priority"))
         requested_top_n = instruction.get("top_n")
         if requested_top_n is not None:
             top_k = int(requested_top_n)
@@ -102,24 +106,42 @@ class CandidateRanker:
             tactical_fit = sum(row["fit"] * row["effective_severity"] for row in weakness_fits) / severity_sum
             if mode == "potential":
                 age_fit = clamp(100 - max(0.0, float(player["age"]) - 21.0) * 10.0, 50, 100)
-                score_weights = (0.68, 0.06, 0.18, 0.08)
+                score_weights = (0.64, 0.06, 0.18, 0.12)
             elif mode == "ready":
                 age_fit = clamp(100 - abs(float(player["age"]) - 25.0) * 4.0, 65, 100)
-                score_weights = (0.78, 0.14, 0.03, 0.05)
+                score_weights = (0.74, 0.14, 0.03, 0.09)
             else:
                 age_fit = clamp(100 - abs(float(player["age"]) - 24.0) * 6.0, 55, 100)
-                score_weights = (0.74, 0.10, 0.08, 0.08)
-            affordability = clamp(
-                100 - max(0.0, float(player["estimated_fee_m"]) - scoring_budget) * 2.5,
-                15,
-                100,
-            )
+                score_weights = (0.70, 0.10, 0.08, 0.12)
+
+            if financial_priority:
+                if mode == "potential":
+                    score_weights = (0.54, 0.05, 0.16, 0.25)
+                elif mode == "ready":
+                    score_weights = (0.63, 0.09, 0.03, 0.25)
+                else:
+                    score_weights = (0.60, 0.08, 0.07, 0.25)
+
+            if club_finance:
+                financial = assess_deal(player, club_finance, user_budget_m=scoring_budget)
+                financial_fit = float(financial["score"])
+            else:
+                financial_fit = clamp(
+                    100 - max(0.0, float(player["estimated_fee_m"]) - scoring_budget) * 2.5,
+                    15,
+                    100,
+                )
+                financial = {
+                    "score": round(financial_fit, 1),
+                    "status": "未評価",
+                    "rationale": "クラブ財政データが接続されていません。",
+                }
             multi_role_bonus = min(4.0, max(0, len(set(player["roles"])) - 1) * 2.0)
             final_score = (
                 tactical_fit * score_weights[0]
                 + availability * score_weights[1]
                 + age_fit * score_weights[2]
-                + affordability * score_weights[3]
+                + financial_fit * score_weights[3]
                 + multi_role_bonus
             )
             confidence = 0.45  # demo data: deliberately capped
@@ -138,7 +160,9 @@ class CandidateRanker:
                     "tactical_fit": round(tactical_fit, 1),
                     "availability_score": round(availability, 1),
                     "age_fit": round(age_fit, 1),
-                    "affordability": round(affordability, 1),
+                    "affordability": round(financial_fit, 1),
+                    "financial_fit": round(financial_fit, 1),
+                    "financial_assessment": financial,
                     "confidence": confidence,
                     "instruction_mode": mode,
                     "matched_constraints": list(instruction.get("labels", [])),
@@ -147,8 +171,14 @@ class CandidateRanker:
                         key=lambda row: row["effective_severity"],
                         reverse=True,
                     ),
-                    "why": f"{strongest['weakness_label']}に対する{strongest['role_label']}適合が最も強い。",
-                    "risk": f"相対的な弱点は{weakest['weakness_label']}への適合。デモ指標のため映像・負傷歴・契約条件で要検証。",
+                    "why": (
+                        f"{strongest['weakness_label']}の改善に必要な"
+                        f"{strongest['role_label']}として、最も高い適合度を示しています。"
+                    ),
+                    "risk": (
+                        f"比較上の懸念は、{weakest['weakness_label']}への適合度が低い点です。"
+                        "デモデータのため、映像、負傷歴、契約条件を別途確認してください。"
+                    ),
                 }
             )
         rankings.sort(key=lambda row: row["score"], reverse=True)

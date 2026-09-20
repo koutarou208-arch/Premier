@@ -51,6 +51,7 @@ def parse_instruction(text: str) -> dict[str, Any]:
         "required_roles": [],
         "priority_weights": {},
         "mode": "balanced",
+        "financial_priority": False,
         "top_n": None,
         "labels": [],
         "unparsed": [],
@@ -64,12 +65,12 @@ def parse_instruction(text: str) -> dict[str, Any]:
         if group not in result["role_groups"]:
             result["role_groups"].append(group)
             result["required_roles"].extend(ROLE_GROUPS[group])
-        label(f"役割: {display}")
+        label(f"役割：{display}")
 
     age = re.search(r"(\d{1,2})\s*歳\s*(?:以下|以内|まで)", value) or re.search(r"u[- ]?(\d{1,2})", value)
     if age:
         result["max_age"] = int(age.group(1))
-        label(f"年齢: {result['max_age']}歳以下")
+        label(f"年齢上限：{result['max_age']}歳")
 
     ten_thousand = re.search(r"(\d{2,5})\s*万\s*(?:ユーロ|€)", value)
     million = re.search(r"(?:€\s*)?(\d+(?:\.\d+)?)\s*(?:m|百万ユーロ)", value)
@@ -81,7 +82,8 @@ def parse_instruction(text: str) -> dict[str, Any]:
     elif hundred_million:
         result["max_fee_m"] = float(hundred_million.group(1)) * 100
     if result["max_fee_m"] is not None:
-        label(f"予算: €{result['max_fee_m']:g}M以内")
+        fee_ten_thousand = int(result["max_fee_m"] * 100)
+        label(f"移籍金上限：{fee_ten_thousand:,}万ユーロ")
 
     if re.search(r"右\s*(?:wg|ウイング)|\brw\b", value):
         role("rw", "右WG")
@@ -103,28 +105,31 @@ def parse_instruction(text: str) -> dict[str, Any]:
         weight = 2.4 if "最優先" in nearby else 1.7 if re.search(r"重視|重要|優先", nearby) else 1.25
         result["priority_weights"][weakness_id] = max(result["priority_weights"].get(weakness_id, 0), weight)
         suffix = "（最優先）" if weight > 2 else "（重視）" if weight > 1.5 else ""
-        label(f"課題: {display}{suffix}")
+        label(f"優先課題：{display}{suffix}")
 
     if re.search(r"ライス.*共存|共存.*ライス", value):
         role("eight", "ライスと共存する8番")
         result["priority_weights"]["low_block_creation"] = max(result["priority_weights"].get("low_block_creation", 0), 1.6)
         result["priority_weights"]["rest_defence"] = max(result["priority_weights"].get("rest_defence", 0), 1.6)
-        label("戦術: ライスとの共存")
+        label("戦術条件：ライスとの共存")
 
     if re.search(r"将来性|若手|伸びしろ|ポテンシャル", value):
         result["mode"] = "potential"
-        label("評価: 将来性重視")
+        label("評価方針：将来性を重視")
     if re.search(r"即戦力|完成度|今すぐ", value):
         result["mode"] = "ready"
-        label("評価: 即戦力重視")
+        label("評価方針：即戦力を重視")
+    if re.search(r"財政|費用対効果|コスパ|割安|予算.*抑|負担.*抑", value):
+        result["financial_priority"] = True
+        label("財政方針：費用対効果を重視")
     if re.search(r"怪我.*(?:除外|少な)|負傷.*(?:除外|少な)|稼働率.*重視", value):
         result["min_availability"] = 82.0
-        label("除外: 稼働率82未満")
+        label("稼働率スコア：82以上")
 
     top = re.search(r"(?:上位|トップ|top)\s*(\d{1,2})", value)
     if top:
         result["top_n"] = max(1, min(20, int(top.group(1))))
-        label(f"表示: 上位{result['top_n']}人")
+        label(f"表示人数：上位{result['top_n']}人")
 
     result["required_roles"] = sorted(set(result["required_roles"]))
     if original and not result["labels"]:

@@ -13,7 +13,7 @@ ENGINE = ScoutEngine()
 TOOLS = [
     {
         "name": "arsenal_analyze_weaknesses",
-        "description": "Analyze Arsenal match features and rank candidates from a free-form Japanese instruction, with evidence-backed weaknesses.",
+        "description": "Analyze Arsenal match features and club finances, then rank candidates from a Japanese instruction with traceable evidence.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -35,7 +35,7 @@ TOOLS = [
             "properties": {
                 "query": {"type": "string"},
                 "top_k": {"type": "integer", "minimum": 1, "maximum": 25},
-                "kinds": {"type": "array", "items": {"enum": ["match", "weakness", "player"]}}
+                "kinds": {"type": "array", "items": {"enum": ["match", "weakness", "player", "finance"]}}
             }
         }
     },

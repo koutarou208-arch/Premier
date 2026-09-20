@@ -62,7 +62,7 @@ class KnowledgeGraph:
         candidate_ids: list[str],
         retrieval_hits: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        seed_nodes = {"team:arsenal"}
+        seed_nodes = {"team:arsenal", "finance:arsenal-demo"}
         seed_nodes.update(f"weakness:{item}" for item in weakness_ids)
         seed_nodes.update(f"player:{item}" for item in candidate_ids)
         for hit in retrieval_hits or []:
@@ -70,6 +70,7 @@ class KnowledgeGraph:
                 seed_nodes.add(hit["id"])
         graph = self.subgraph(seed_nodes, depth=1)
         paths = []
+        financial_paths = []
         for candidate_id in candidate_ids:
             target = f"player:{candidate_id}"
             for weakness_id in weakness_ids:
@@ -84,7 +85,17 @@ class KnowledgeGraph:
                             "nodes": [source, *[edge["target"] for edge in path]],
                         }
                     )
-        return {**graph, "paths": paths}
+            financial_path = self.shortest_path("finance:arsenal-demo", target, max_depth=3)
+            if financial_path:
+                financial_paths.append(
+                    {
+                        "from": "finance:arsenal-demo",
+                        "to": target,
+                        "relations": [edge["relation"] for edge in financial_path],
+                        "nodes": ["finance:arsenal-demo", *[edge["target"] for edge in financial_path]],
+                    }
+                )
+        return {**graph, "paths": paths, "financial_paths": financial_paths}
 
     def export(self) -> dict[str, Any]:
         return {"nodes": list(self.nodes.values()), "edges": self.edges}
@@ -95,10 +106,33 @@ def build_graph(
     players_data: dict[str, Any],
     ontology: dict[str, Any],
     weaknesses: list[dict[str, Any]],
+    finance: dict[str, Any] | None = None,
+    rankings: list[dict[str, Any]] | None = None,
 ) -> KnowledgeGraph:
     graph = KnowledgeGraph()
     graph.add_node("team:arsenal", "Team", "Arsenal")
     graph.add_node("source:demo", "Source", "Bundled synthetic demo", quality="synthetic_demo")
+
+    if finance:
+        finance_id = "finance:arsenal-demo"
+        graph.add_node(
+            finance_id,
+            "FinancialSnapshot",
+            "クラブの補強余力（デモ）",
+            usable_budget_m=finance["usable_transfer_budget_m"],
+            annual_wage_headroom_m=finance["annual_wage_headroom_m"],
+            data_quality=finance["meta"]["data_quality"],
+        )
+        graph.add_edge("team:arsenal", finance_id, "HAS_FINANCIAL_SNAPSHOT")
+        constraints = [
+            ("transfer-budget", "使用可能な補強予算", finance["usable_transfer_budget_m"], "百万ユーロ"),
+            ("wage-headroom", "年間賃金の余力", finance["annual_wage_headroom_m"], "百万ユーロ"),
+            ("single-fee", "1選手あたりの移籍金目安", finance["max_single_fee_guideline_m"], "百万ユーロ"),
+        ]
+        for key, label, value, unit in constraints:
+            constraint_id = f"financial-constraint:{key}"
+            graph.add_node(constraint_id, "FinancialConstraint", label, value=value, unit=unit)
+            graph.add_edge(finance_id, constraint_id, "DEFINES_CONSTRAINT")
 
     for weakness in weaknesses:
         weakness_id = f"weakness:{weakness['id']}"
@@ -142,12 +176,29 @@ def build_graph(
         for role in definition["target_roles"]:
             target_role_to_weaknesses[role].append(weakness_id)
 
+    ranking_by_player = {item["player_id"]: item for item in rankings or []}
     for player in players_data["players"]:
         player_id = f"player:{player['id']}"
         club_id = f"club:{player['club'].lower().replace(' ', '-')}"
         graph.add_node(player_id, "Player", player["name"], age=player["age"], fee_m=player["estimated_fee_m"])
         graph.add_node(club_id, "Club", player["club"], league=player["league"])
         graph.add_edge(player_id, club_id, "PLAYS_FOR")
+        ranking = ranking_by_player.get(player["id"])
+        if finance and ranking:
+            assessment = ranking["financial_assessment"]
+            deal_id = f"deal:{player['id']}"
+            graph.add_node(
+                deal_id,
+                "ProjectedDeal",
+                f"{player['name']}の獲得費用",
+                fee_m=player["estimated_fee_m"],
+                annual_wage_m=assessment.get("annual_wage_m"),
+                first_year_cost_m=assessment.get("first_year_cost_m"),
+                financial_fit=assessment["score"],
+                status=assessment["status"],
+            )
+            graph.add_edge(player_id, deal_id, "HAS_PROJECTED_DEAL")
+            graph.add_edge("finance:arsenal-demo", deal_id, "EVALUATES_DEAL")
         for role in player["roles"]:
             role_id = f"role:{role}"
             role_data = ontology["roles"][role]
